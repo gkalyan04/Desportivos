@@ -23,6 +23,7 @@ lemm = WordNetLemmatizer()
 import re
 import datetime
 import en_core_web_sm
+import spacy
 
 columns=["Team","Bowler","Batsmen","Over","Ball","Team_win","Team_run","Team_wickets","Boundaries","Sixes","Valid Before"]
 todays_date = datetime.datetime.now().date()
@@ -33,7 +34,7 @@ from tkinter import *
 root=Tk()
 def retrieve_input():
     s=textBox.get("1.0","end-1c")
-    import spacy
+
     name=[]
     ent=[]
     nlp = en_core_web_sm.load()
@@ -62,7 +63,7 @@ def retrieve_input():
                     df.iloc[c]["Team_wickets"]=1
                     df.iloc[c]["Valid Before"]=20
                 elif "runs" in ls2 or "run" in ls2:
-                    df.iloc[c]["Team_run"]=1 
+                    df.iloc[c]["Team_run"]=1
                     df.iloc[c]["Valid Before"]=20
                 elif "boundaries" in ls2:
                         df.iloc[c]["Boundaries"]=1
@@ -71,14 +72,14 @@ def retrieve_input():
                         df.iloc[c]["Sixes"]=1
                         df.iloc[c]["Valid Before"]=20
             elif ent[i]=='ORDINAL'or ent[i]=='CARDINAL' or ent[i]=='DATE':
-                if "over" in ls2 or "overs" in ls2: 
+                if "over" in ls2 or "overs" in ls2:
                     if "." in name[i]:
                         s=name[i].split(".")
                         df.iloc[c]["Over"]=int(s[0])
                         df.iloc[c]["Ball"]=int(s[1])
                     df.iloc[c]["Over"]=int(name[i][0:-2])
             else:
-                if "wickets" in ls2 or "wicket" in ls2: 
+                if "wickets" in ls2 or "wicket" in ls2:
                     df.iloc[c]["Bowler"]=name[i]
                     df.iloc[c]["Valid Before"]=5
                 else:
@@ -92,7 +93,7 @@ def retrieve_input():
                         df.iloc[c]["Valid Before"]=20
 
 
-    elif "wickets" in ls2 or "wicket" in ls2: 
+    elif "wickets" in ls2 or "wicket" in ls2:
             df.iloc[c]["Team"]="Both"
             df.iloc[c]["Team_wickets"]=1
             df.iloc[c]["Valid Before"]=20
@@ -116,7 +117,7 @@ def retrieve_input():
         print("INVALID QUESTION")
 textBox=Text(root, height=20, width=80)
 textBox.pack()
-buttonCommit=Button(root, height=1, width=10, text="Post Question", 
+buttonCommit=Button(root, height=1, width=10, text="Post Question",
                     command=lambda: retrieve_input())
 #command=lambda: retrieve_input() >>> just means do this when i press the button
 buttonCommit.pack()
@@ -144,4 +145,3 @@ class TestApp(Frame):
 app = TestApp()
 #launch the app
 app.mainloop()
-
