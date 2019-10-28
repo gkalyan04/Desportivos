@@ -1,8 +1,8 @@
 pragma solidity >=0.4.22 <0.6.0;
 
-/// @title Sportsmania 0% fees
+/// @title Desportivos ~0% fees
 
-contract SportsMania {
+contract Desportivos {
 
     // It will represent a single voter of each MCQ qid.
     struct Voter {
@@ -16,6 +16,7 @@ contract SportsMania {
         uint submittedans; //ans submitted by each voter
     }
 
+    
     // This is a type for a single MCQ Option.
     struct Option {
         bytes32 name;   // short name of mcq text
@@ -27,11 +28,12 @@ contract SportsMania {
     struct Question {
         //uint qid; // question id
         uint _type; // 1=mcq, 2=integer type
-        bytes32 contenthash; // sha256 content hash of questions
+        string contenthash; // content hash of questions
         uint vote_price; // price/rate for 1 vote in DAI
         uint correct_ans_id;
         bytes32 correct_answer; // after event has occured
-        Option[6] options; // all options
+        Option[6] options; // all max 6 options
+        
         uint totalCount;
         address[] winners;
         uint8 active;
@@ -50,9 +52,16 @@ contract SportsMania {
     // for integer questions
     mapping(uint => IntegerVoter[]) allsubmissions;
 
-
     // contribution/ditribution
     event FundTransfer(address backer, uint amount, bool isContribution);
+
+    event QuestionCreation(address backer, uint qid, uint _type);
+
+    event FantasyCreation(address backer, uint qid, uint _type);
+
+    event VotingDone(address backer, uint qid, uint power);
+
+    event FantasyParticipation(address backer, uint qid);
 
 
     /// Create a new ballot to choose one of `proposalNames`.
@@ -63,8 +72,8 @@ contract SportsMania {
  
 
 //_type; // 1=mcq, 2=integer type
-    function createquestionMCQ(uint _qid, bytes32 _contenthash,
-                             uint _vote_price, bytes32[]  memory _proposalNames ) public{
+    function createquestionMCQ(uint _qid, string memory _contenthash,
+                             uint _vote_price, bytes32[]  memory _options ) public{
         
 
         require(alloptions[_qid].active!=1,"Question id already exists");
@@ -73,8 +82,8 @@ contract SportsMania {
         //bytes memory b = new bytes(len);
         //Option memory opt;
 
-        for (uint i = 0; i < _proposalNames.length; i++) {
-            alloptions[_qid].options[i].name=_proposalNames[i];
+        for (uint i = 0; i < _options.length; i++) {
+            alloptions[_qid].options[i].name=_options[i];
             alloptions[_qid].options[i].voteCount = 0;
         }
         
@@ -86,10 +95,12 @@ contract SportsMania {
             alloptions[_qid].declared_result=0;
             alloptions[_qid].stopped=0;
     
+            emit QuestionCreation(msg.sender, _qid, 1);
+
 }
 
 
-    function createquestionInteger(uint _qid, bytes32 _contenthash,
+    function createquestionInteger(uint _qid, string memory _contenthash,
                              uint _vote_price) public{
         
 
@@ -102,8 +113,12 @@ contract SportsMania {
             alloptions[_qid].active=1;
             alloptions[_qid].declared_result=0;
             alloptions[_qid].stopped=0;
+            
+            emit QuestionCreation(msg.sender, _qid, 2);
+
     
 }
+
 
 
 
@@ -147,12 +162,16 @@ function stopVoting(uint _qid) public{
         
         uint typeofQ = alloptions[_qid]._type;
 
+        // in case of MCQ        
         if(typeofQ==1)
             alloptions[_qid].correct_answer = alloptions[_qid].options[ansid].name;
 
 
     }
         
+
+
+
         
     function addBal(address _payer, uint _quantity) public{
         require(
@@ -183,7 +202,8 @@ function stopVoting(uint _qid) public{
 
         uint typeofQ = alloptions[_qid]._type;
         
-        balanceOf[msg.sender]-=_amount;
+        // commented for testing
+       // balanceOf[msg.sender]-=_amount;
 
         uint _power= (_amount)/ (alloptions[_qid].vote_price);
 
@@ -218,9 +238,12 @@ function stopVoting(uint _qid) public{
         }
 
         
+        emit VotingDone(msg.sender, _qid, _power);
+
         
     }
     
+    // call this after submit solution
     function distributewin(uint _qid) public{
         
         uint ansid=alloptions[_qid].correct_ans_id;
@@ -301,6 +324,9 @@ function stopVoting(uint _qid) public{
                 balanceOf[rewardees[i]]+=distributereward;
 
         }
+            
+         
+
         
         alloptions[_qid].winners = rewardees;
 
@@ -322,6 +348,7 @@ function stopVoting(uint _qid) public{
         emit FundTransfer(msg.sender,amt,false);
 
     }    
+    
     
     
     
@@ -349,7 +376,3 @@ function stopVoting(uint _qid) public{
 // 1
 // 0x77696c6c20766b206869742063656e7475727900000000000000000000000000
 // 1
-// ["0x616c696365000000000000000000000000000000000000000000000000000000","0x626f620000000000000000000000000000000000000000000000000000000000"]
-
-
-
